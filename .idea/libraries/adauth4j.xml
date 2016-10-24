@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="adauth4j">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../azure-tools-for-java-private/adauth4j.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

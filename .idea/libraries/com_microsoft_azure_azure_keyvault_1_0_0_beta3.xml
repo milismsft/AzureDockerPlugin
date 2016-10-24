@@ -1,0 +1,31 @@
+<component name="libraryTable">
+  <library name="com.microsoft.azure:azure-keyvault:1.0.0-beta3" type="repository">
+    <properties maven-id="com.microsoft.azure:azure-keyvault:1.0.0-beta3" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/azure-keyvault-1.0.0-beta3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/azure-client-runtime-1.0.0-beta3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/client-runtime-1.0.0-beta3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/guava-18.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/retrofit-2.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/okhttp-3.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/okio-1.8.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/logging-interceptor-3.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/okhttp-urlconnection-3.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/converter-jackson-2.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackson-databind-2.6.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackson-annotations-2.6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackson-core-2.6.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackson-datatype-joda-2.7.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/joda-time-2.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-lang3-3.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/rxjava-1.1.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/adapter-rxjava-2.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/azure-keyvault-webkey-1.0.0-beta3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-codec-1.10.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/azure-keyvault-1.0.0-beta3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

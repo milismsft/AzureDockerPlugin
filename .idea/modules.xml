@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/AzureCSPack/AzureCSPack.iml" filepath="$PROJECT_DIR$/AzureCSPack/AzureCSPack.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AzureDockerCreds/AzureDockerCreds.iml" filepath="$PROJECT_DIR$/AzureDockerCreds/AzureDockerCreds.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AzureDockerOps/AzureDockerOps.iml" filepath="$PROJECT_DIR$/AzureDockerOps/AzureDockerOps.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AzureDockerPlugin.iml" filepath="$PROJECT_DIR$/AzureDockerPlugin.iml" />
+    </modules>
+  </component>
+</project>
