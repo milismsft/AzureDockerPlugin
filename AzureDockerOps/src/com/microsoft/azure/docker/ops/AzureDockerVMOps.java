@@ -201,11 +201,7 @@ public class AzureDockerVMOps {
       System.out.println("Script to run:");
       System.out.println(createTLScerts);
 
-      JSch jsch = new JSch();
-      Session session = jsch.getSession(dockerHost.certVault.vmUsername, dockerHost.hostVM.dnsName);
-      session.setPassword(dockerHost.certVault.vmPwd);
-      session.setConfig("StrictHostKeyChecking", "no");
-      session.connect();
+      Session session = AzureDockerSSHOps.createLoginInstance(dockerHost);
       System.out.println("Start executing ssh");
       Channel channel = session.openChannel("exec");
       ((ChannelExec)channel).setCommand("ls /");
