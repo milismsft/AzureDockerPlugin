@@ -1,6 +1,16 @@
 import com.microsoft.azure.docker.creds.AzureCredsManager
 import com.microsoft.azure.docker.ops.AzureDockerCertVaultOps
+import com.microsoft.azure.docker.ops.AzureDockerVMOps
 import com.microsoft.azure.docker.resources.AzureDockerCertVault
+import com.microsoft.azure.docker.resources.AzureDockerVM
+import com.microsoft.azure.docker.resources.DockerHost
+import com.microsoft.azure.docker.resources.KnownDockerVirtualMachineImage
+import com.microsoft.azure.management.Azure
+import com.microsoft.azure.management.compute.ImageReference
+import com.microsoft.azure.management.compute.VirtualMachine
+import com.microsoft.azure.management.network.IPVersion
+import com.microsoft.azure.management.network.NicIpConfiguration
+import com.microsoft.azure.management.resources.ResourceGroup
 import com.sun.istack.internal.NotNull
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper
@@ -20,6 +30,10 @@ class AppMain {
     try {
       LogManager.getLogManager().reset();
 
+      ObjectMapper mapper = new ObjectMapper()
+          .configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+
       System.out.println("Tenant Subscription list:")
       Collection<String> tenantSubscriptions = AzureCredsManager.getADTenantSubscriptionsList()
       tenantSubscriptions.each {subscription -> System.out.println(subscription)}
@@ -29,9 +43,9 @@ class AppMain {
 ////      KeyVaultClient keyVaultClient = AzureCredsManager.getADKeyVaultClient();
 ////      Azure azureClient = AzureCredsManager.createAuthLoginDefaultAzureClient()
 //      KeyVaultClient keyVaultClient = AzureCredsManager.getSPKeyVaultClient();
-//      Azure azureClient = AzureCredsManager.createSPDefaultAzureClient();
-//      azureClient.vaults()
-//
+      Azure azureClient = AzureCredsManager.createSPDefaultAzureClient();
+      azureClient.vaults()
+
       AzureDockerCertVault certVault; // = new AzureDockerCertVault()
 
       String path = "/Volumes/SharedDisk/workspace/docker/certs/";
@@ -39,21 +53,31 @@ class AppMain {
       certVault = AzureDockerCertVaultOps.createFromLocalFiles(path);
 
 //      // certVault.name = AzureDockerCertVaultOps.generateUniqueKeyVaultName("dockervault2")
-//      certVault.name = "dockervault2629442"
-//      certVault.hostName = "dockerhost2"
-//      certVault.region = "centralus"
-//      certVault.resourceGroupName = "temp-centralus"
-//      certVault.userName = "adrianmi@microsoft.com"
-//      certVault.servicePrincipalId = AzureCredsManager.CLIENT_ID
-////      certVault.vmUsername = "ubuntu"
-////      certVault.vmPwd = "azurecon@1"
-////      certVault.sshKey = "sshkey"
-////      certVault.sshPubKey = "sshpubkey"
-////      certVault.tlsCACert = "tlscacert"
-////      certVault.tlsCert = "tlscert"
-////      certVault.tlsClientKey = "tlsclientkey"
-////      certVault.tlsHostCert = "tlshostcert"
-////      certVault.tlsServerKey = "tlsserverkey"
+//      ImageReference imgRef = KnownDockerVirtualMachineImage.OPENLOGIC_CENTOS_7_2.imageReference()
+//      certVault.name = "dockercentos11"
+//      ImageReference imgRef = KnownDockerVirtualMachineImage.COREOS_STABLE_LATEST.imageReference()
+//      certVault.name = "dockercoreos12"
+//      ImageReference imgRef = KnownDockerVirtualMachineImage.UBUNTU_SNAPPY_CORE_15_04.imageReference()
+//      certVault.name = "dockerubuntu15"
+      ImageReference imgRef = KnownDockerVirtualMachineImage.UBUNTU_SERVER_14_04_LTS.imageReference()
+      certVault.name = "dockerubuntu14"
+//      ImageReference imgRef = KnownDockerVirtualMachineImage.UBUNTU_SERVER_16_04_LTS.imageReference()
+//      certVault.name = "dockerubuntu16"
+      certVault.hostName = certVault.name
+      certVault.region = "centralus"
+//      certVault.availabilitySet = certVault.name
+      certVault.resourceGroupName = certVault.hostName + "-centralus"
+      certVault.userName = "adrianmi@microsoft.com"
+      certVault.servicePrincipalId = AzureCredsManager.CLIENT_ID
+      certVault.vmUsername = "ubuntu"
+      certVault.vmPwd = "azureconsole@1"
+//      certVault.sshKey = "sshkey"
+//      certVault.sshPubKey = "sshpubkey"
+//      certVault.tlsCACert = "tlscacert"
+//      certVault.tlsCert = "tlscert"
+//      certVault.tlsClientKey = "tlsclientkey"
+//      certVault.tlsHostCert = "tlshostcert"
+//      certVault.tlsServerKey = "tlsserverkey"
 //
 //      AzureDockerCertVaultOps.createOrUpdateVault(azureClient, certVault, keyVaultClient)
 //
@@ -68,17 +92,38 @@ class AppMain {
 //      AzureDockerCertVaultOps.saveToLocalFiles(path2, outputVault);
 
       System.out.println("Dump current vault:");
-      ObjectMapper mapper = new ObjectMapper()
-          .configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-          .configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
       System.out.println(mapper.writeValueAsString(certVault));
 
 //      getSSHKeys()
-      TestNotNull(null)
+
+      System.out.println("Resource Groups:")
+      for (ResourceGroup rg : azureClient.resourceGroups().list()) {
+        System.out.println("\t" + rg.name())
+      }
+
+//      System.out.println("Create VM")
+//      System.out.println("\tStarting at: " + new Date(System.currentTimeMillis()).toString())
+//      AzureDockerVMOps.createDefaultDockerHostVM(azureClient, certVault, imgRef)
+//      System.out.println("\tFinished at: " + new Date(System.currentTimeMillis()).toString())
+
+      AzureDockerVM vm = AzureDockerVMOps.getDockerVM(azureClient, certVault.resourceGroupName, certVault.hostName)
+      DockerHost dockerHost = AzureDockerVMOps.getDockerHost(certVault, vm);
+      System.out.println("Dump new Virtual Machine:");
+      System.out.println(mapper.writeValueAsString(dockerHost));
+
+      AzureDockerVMOps.installDocker(dockerHost);
+
+
+//      System.out.println("Delete VM")
+//      System.out.println("\tStarting at: " + new Date(System.currentTimeMillis()).toString())
+//      azureClient.resourceGroups().delete(certVault.resourceGroupName)
+//      azureClient.resourceGroups().delete("docker3-centralus")
+//      System.out.println("\tFinished at: " + new Date(System.currentTimeMillis()).toString())
 
       println("Passed")
     } catch (Exception e) {
       println("Failed: " + e.getMessage())
+      e.printStackTrace()
     } finally {
       System.exit(0);
     }

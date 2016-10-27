@@ -8,5 +8,13 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="groovy-2.4.7" level="application" />
+    <orderEntry type="library" name="com.microsoft.azure:azure:1.0.0-beta3" level="project" />
+    <orderEntry type="library" name="com.jcraft:jsch:0.1.54" level="project" />
+    <orderEntry type="library" name="Simple Logging Facade for Java:1.7.5" level="project" />
+    <orderEntry type="library" name="com.microsoft.azure:azure-keyvault:1.0.0-beta3" level="project" />
+    <orderEntry type="library" name="com.microsoft.azure:azure-mgmt-compute:1.0.0-beta3" level="project" />
+    <orderEntry type="library" name="org.codehaus.jackson:jackson-core-asl:1.9.13" level="project" />
+    <orderEntry type="library" name="org.codehaus.jackson:jackson-mapper-asl:1.9.13" level="project" />
+    <orderEntry type="library" name="com.microsoft.azure:azure-mgmt-network:1.0.0-beta3" level="project" />
   </component>
 </module>

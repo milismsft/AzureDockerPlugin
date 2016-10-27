@@ -6,6 +6,7 @@ import groovy.transform.Canonical;
 public class AzureDockerCertVault {
   public String name;                   // Vault's name
   public String hostName;               // name of the host (Docker host) to store the credentials for
+  public String availabilitySet;        // Azure availability set where to create the vault
   public String resourceGroupName;      // Azure resource group where to create the vault
   public String region;                 // Azure location where to create the vault
   public String servicePrincipalId;     // service principal's client id if user logged in with service principal credentials

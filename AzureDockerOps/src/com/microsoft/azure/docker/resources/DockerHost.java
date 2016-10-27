@@ -9,7 +9,17 @@ public class DockerHost {
   public String port;
   public Boolean hasReleaseConfig;
   public Boolean hasDebugConfig;
-  public AzureDockerVM host;
+  public AzureDockerVM hostVM;
   public List<DockerImage> dockerImages;
   public Boolean isTLSSecured;
+  public DockerHostOSType hostOSType;
+
+  public enum DockerHostOSType {
+    UBUNTU_SERVER_14,
+    UBUNTU_SERVER_16,
+    UBUNTU_SNAPPY_CORE,
+    COREOS,
+    OPENLOGIC_CENTOS,
+    LINUX_OTHER
+  }
 }

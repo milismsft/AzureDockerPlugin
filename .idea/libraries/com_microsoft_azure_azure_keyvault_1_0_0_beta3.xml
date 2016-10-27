@@ -23,7 +23,9 @@
       <root url="jar://$PROJECT_DIR$/lib/azure-keyvault-webkey-1.0.0-beta3.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/commons-codec-1.10.jar!/" />
     </CLASSES>
-    <JAVADOC />
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib/azure-keyvault-1.0.0-beta3-javadoc.jar!/" />
+    </JAVADOC>
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/lib/azure-keyvault-1.0.0-beta3-sources.jar!/" />
     </SOURCES>
