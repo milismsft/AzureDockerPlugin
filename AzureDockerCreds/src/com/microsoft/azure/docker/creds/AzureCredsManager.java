@@ -8,7 +8,12 @@ import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.rest.credentials.ServiceClientCredentials;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,11 +27,30 @@ public class AzureCredsManager {
   private static AzureCredsManager azureCredsManager;
   private static KeyVaultClient spKeyVaultClient;
   private static KeyVaultClient adKeyVaultClient;
+  private static String TENANT_ID;
+  private static String SUBSCRIPTION_ID;
+  private static String CLIENT_ID;
+  private static String APPKEY;
+
+  private static final String CREDS_FILE = "/Volumes/SharedDisk/workspace/docker/sp_creds.json";
 
   private AzureCredsManager() {
   }
 
+  private static void loadCerts() {
+    try {
+      String c =  new String(Files.readAllBytes(Paths.get(CREDS_FILE)));
+      ObjectMapper mapper = new ObjectMapper().configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      MyCreds creds = mapper.readValue(c, MyCreds.class);
+      TENANT_ID = creds.TENANT_ID;
+      SUBSCRIPTION_ID = creds.SUBSCRIPTION_ID;
+      CLIENT_ID = creds.CLIENT_ID;
+      APPKEY = creds.APPKEY;
+    } catch (Exception e) { throw new RuntimeException(e);}
+  }
+
   private static void createADCreds() {
+    loadCerts();
     adAuthenticator = null; // cleanup local cache
     if (azureCredsManager == null) {
       azureCredsManager = new AzureCredsManager();
@@ -36,6 +60,7 @@ public class AzureCredsManager {
   }
 
   private static void createSPCreds(ApplicationTokenCredentials applicationTokenCredentials) {
+    loadCerts();
     spAuthenticator = null; // cleanup local cache
     if (azureCredsManager == null) {
       azureCredsManager = new AzureCredsManager();
@@ -228,6 +253,7 @@ public class AzureCredsManager {
   }
 
   private static ApplicationTokenCredentials getDefaultTokenCredentials() {
+    loadCerts();
     return new ApplicationTokenCredentials(CLIENT_ID, TENANT_ID, APPKEY, AzureEnvironment.AZURE);
   }
 
@@ -272,4 +298,10 @@ public class AzureCredsManager {
     return result;
   }
 
+  static class MyCreds {
+    public String TENANT_ID;
+    public String SUBSCRIPTION_ID;
+    public String CLIENT_ID;
+    public String APPKEY;
+  }
 }
