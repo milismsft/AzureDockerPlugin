@@ -32,15 +32,16 @@ public class AzureDockerCertVaultOps {
     if (certVault == null || certVault.hostName == null) return null;
 
     Map<String, String> secretsMap = new HashMap<>();
-    secretsMap.put("vmUsername",   certVault.vmUsername != null ?   certVault.vmUsername : DELETE_SECRET);
-    secretsMap.put("vmPwd",        certVault.vmPwd != null ?        certVault.vmPwd : DELETE_SECRET);
-    secretsMap.put("sshKey",       certVault.sshKey != null ?       certVault.sshKey : DELETE_SECRET);
-    secretsMap.put("sshPubKey",    certVault.sshPubKey != null ?    certVault.sshPubKey : DELETE_SECRET);
-    secretsMap.put("tlsCACert",    certVault.tlsCACert != null ?    certVault.tlsCACert : DELETE_SECRET);
-    secretsMap.put("tlsCert",      certVault.tlsCert != null ?      certVault.tlsCert : DELETE_SECRET);
-    secretsMap.put("tlsClientKey", certVault.tlsClientKey != null ? certVault.tlsClientKey : DELETE_SECRET);
-    secretsMap.put("tlsHostCert",  certVault.tlsHostCert != null ?  certVault.tlsHostCert : DELETE_SECRET);
-    secretsMap.put("tlsServerKey", certVault.tlsServerKey != null ? certVault.tlsServerKey : DELETE_SECRET);
+    secretsMap.put("vmUsername",     certVault.vmUsername != null ?     certVault.vmUsername : DELETE_SECRET);
+    secretsMap.put("vmPwd",          certVault.vmPwd != null ?          certVault.vmPwd : DELETE_SECRET);
+    secretsMap.put("sshKey",         certVault.sshKey != null ?         certVault.sshKey : DELETE_SECRET);
+    secretsMap.put("sshPubKey",      certVault.sshPubKey != null ?      certVault.sshPubKey : DELETE_SECRET);
+    secretsMap.put("tlsCACert",      certVault.tlsCACert != null ?      certVault.tlsCACert : DELETE_SECRET);
+    secretsMap.put("tlsCAKey",       certVault.tlsCAKey != null ?       certVault.tlsCAKey : DELETE_SECRET);
+    secretsMap.put("tlsClientCert",  certVault.tlsClientCert != null ?  certVault.tlsClientCert : DELETE_SECRET);
+    secretsMap.put("tlsClientKey",   certVault.tlsClientKey != null ?   certVault.tlsClientKey : DELETE_SECRET);
+    secretsMap.put("tlsServerCert",  certVault.tlsServerCert != null ?  certVault.tlsServerCert : DELETE_SECRET);
+    secretsMap.put("tlsServerKey",   certVault.tlsServerKey != null ?   certVault.tlsServerKey : DELETE_SECRET);
 
     return secretsMap;
   }
@@ -248,8 +249,13 @@ public class AzureDockerCertVaultOps {
       } catch (Exception e){}
 
       try {
-        SecretBundle secret = keyVaultClient.getSecret(vault.vaultUri(), "tlsCert");
-        if (secret != null) certVault.tlsCert = secret.value();
+        SecretBundle secret = keyVaultClient.getSecret(vault.vaultUri(), "tlsCAKey");
+        if (secret != null) certVault.tlsCAKey = secret.value();
+      } catch (Exception e){}
+
+      try {
+        SecretBundle secret = keyVaultClient.getSecret(vault.vaultUri(), "tlsClientCert");
+        if (secret != null) certVault.tlsClientCert = secret.value();
       } catch (Exception e){}
 
       try {
@@ -258,8 +264,8 @@ public class AzureDockerCertVaultOps {
       } catch (Exception e){}
 
       try {
-        SecretBundle secret = keyVaultClient.getSecret(vault.vaultUri(), "tlsHostCert");
-        if (secret != null) certVault.tlsHostCert = secret.value();
+        SecretBundle secret = keyVaultClient.getSecret(vault.vaultUri(), "tlsServerCert");
+        if (secret != null) certVault.tlsServerCert = secret.value();
       } catch (Exception e){}
 
       try {
@@ -308,17 +314,29 @@ public class AzureDockerCertVaultOps {
     }
   }
 
-  public static AzureDockerCertVault createFromLocalFiles(String localPath) throws AzureDockerException {
+  public static AzureDockerCertVault createSSHKeysFromLocalFiles(String localPath) throws AzureDockerException {
     AzureDockerCertVault certVault = new AzureDockerCertVault();
 
     try {
-      certVault.sshKey       = new String(Files.readAllBytes(Paths.get(localPath + "/id_rsa")));
-      certVault.sshPubKey    = new String(Files.readAllBytes(Paths.get(localPath + "/id_rsa.pub")));
-      certVault.tlsCACert    = new String(Files.readAllBytes(Paths.get(localPath + "/ca.pem")));
-      certVault.tlsCert      = new String(Files.readAllBytes(Paths.get(localPath + "/cert.pem")));
-      certVault.tlsClientKey = new String(Files.readAllBytes(Paths.get(localPath + "/key.pem")));
-      certVault.tlsHostCert  = new String(Files.readAllBytes(Paths.get(localPath + "/server.pem")));
-      certVault.tlsServerKey = new String(Files.readAllBytes(Paths.get(localPath + "/server-key.pem")));
+      certVault.sshKey         = new String(Files.readAllBytes(Paths.get(localPath + "/id_rsa")));
+      certVault.sshPubKey      = new String(Files.readAllBytes(Paths.get(localPath + "/id_rsa.pub")));
+    } catch(Exception e) {
+      throw new AzureDockerException(e.getMessage());
+    }
+
+    return certVault;
+  }
+
+  public static AzureDockerCertVault createTLSCertsFromLocalFiles(String localPath) throws AzureDockerException {
+    AzureDockerCertVault certVault = new AzureDockerCertVault();
+
+    try {
+      certVault.tlsCACert      = new String(Files.readAllBytes(Paths.get(localPath + "/ca.pem")));
+      certVault.tlsCACert      = new String(Files.readAllBytes(Paths.get(localPath + "/ca-key.pem")));
+      certVault.tlsClientCert  = new String(Files.readAllBytes(Paths.get(localPath + "/cert.pem")));
+      certVault.tlsClientKey   = new String(Files.readAllBytes(Paths.get(localPath + "/key.pem")));
+      certVault.tlsServerCert  = new String(Files.readAllBytes(Paths.get(localPath + "/server.pem")));
+      certVault.tlsServerKey   = new String(Files.readAllBytes(Paths.get(localPath + "/server-key.pem")));
     } catch(Exception e) {
       throw new AzureDockerException(e.getMessage());
     }
@@ -328,13 +346,14 @@ public class AzureDockerCertVaultOps {
 
   public static void saveToLocalFiles(String localPath, AzureDockerCertVault certVault) throws AzureDockerException {
     try {
-      if(certVault.sshKey != null)       { FileWriter file = new FileWriter(localPath + "/id_rsa");         file.write(certVault.sshKey);       file.close();}
-      if(certVault.sshPubKey != null)    { FileWriter file = new FileWriter(localPath + "/id_rsa.pub");     file.write(certVault.sshPubKey);    file.close();}
-      if(certVault.tlsCACert != null)    { FileWriter file = new FileWriter(localPath + "/ca.pem");         file.write(certVault.tlsCACert);    file.close();}
-      if(certVault.tlsCert != null)      { FileWriter file = new FileWriter(localPath + "/cert.pem");       file.write(certVault.tlsCert);      file.close();}
-      if(certVault.tlsClientKey != null) { FileWriter file = new FileWriter(localPath + "/key.pem");        file.write(certVault.tlsClientKey); file.close();}
-      if(certVault.tlsHostCert != null)  { FileWriter file = new FileWriter(localPath + "/server.pem");     file.write(certVault.tlsHostCert);  file.close();}
-      if(certVault.tlsServerKey != null) { FileWriter file = new FileWriter(localPath + "/server-key.pem"); file.write(certVault.tlsServerKey); file.close();}
+      if(certVault.sshKey != null)         { FileWriter file = new FileWriter(localPath + "/id_rsa");         file.write(certVault.sshKey);         file.close();}
+      if(certVault.sshPubKey != null)      { FileWriter file = new FileWriter(localPath + "/id_rsa.pub");     file.write(certVault.sshPubKey);      file.close();}
+      if(certVault.tlsCACert != null)      { FileWriter file = new FileWriter(localPath + "/ca.pem");         file.write(certVault.tlsCACert);      file.close();}
+      if(certVault.tlsCAKey != null)       { FileWriter file = new FileWriter(localPath + "/ca-key.pem");     file.write(certVault.tlsCACert);      file.close();}
+      if(certVault.tlsClientCert != null)  { FileWriter file = new FileWriter(localPath + "/cert.pem");       file.write(certVault.tlsClientCert);  file.close();}
+      if(certVault.tlsClientKey != null)   { FileWriter file = new FileWriter(localPath + "/key.pem");        file.write(certVault.tlsClientKey);   file.close();}
+      if(certVault.tlsServerCert != null)  { FileWriter file = new FileWriter(localPath + "/server.pem");     file.write(certVault.tlsServerCert);  file.close();}
+      if(certVault.tlsServerKey != null)   { FileWriter file = new FileWriter(localPath + "/server-key.pem"); file.write(certVault.tlsServerKey);   file.close();}
     } catch(Exception e) {
       throw new AzureDockerException(e.getMessage());
     }

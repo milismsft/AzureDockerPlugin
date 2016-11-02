@@ -1,5 +1,7 @@
 package com.microsoft.azure.docker.resources;
 
+import com.jcraft.jsch.Session;
+
 import java.util.List;
 
 public class DockerHost {
@@ -13,6 +15,7 @@ public class DockerHost {
   public List<DockerImage> dockerImages;
   public Boolean isTLSSecured;
   public DockerHostOSType hostOSType;
+  public Session session;
 
   public enum DockerHostOSType {
     UBUNTU_SERVER_14,

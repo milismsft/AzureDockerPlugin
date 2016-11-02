@@ -16,8 +16,9 @@ public class AzureDockerCertVault {
   public String sshKey;                 // see "id_rsa"
   public String sshPubKey;              // see "id_rsa.pub"
   public String tlsCACert;              // see "ca.pem"
-  public String tlsCert;                // see "cert.pem"
+  public String tlsCAKey;               // see "ca-key.pem"
+  public String tlsClientCert;          // see "cert.pem"
   public String tlsClientKey;           // see "key.pem"
-  public String tlsHostCert;            // see "server.pem"
+  public String tlsServerCert;          // see "server.pem"
   public String tlsServerKey;           // see "server-key.pem"
 }

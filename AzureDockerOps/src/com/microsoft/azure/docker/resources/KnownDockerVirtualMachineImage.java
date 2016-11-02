@@ -3,6 +3,7 @@ package com.microsoft.azure.docker.resources;
 import com.microsoft.azure.management.compute.ImageReference;
 import com.microsoft.azure.management.compute.KnownLinuxVirtualMachineImage;
 
+// TBD: This structure can be read from an external file making it easier to edit/update
 public enum KnownDockerVirtualMachineImage {
   /** Ubuntu_Snappy_Core 15.04 */
   UBUNTU_SNAPPY_CORE_15_04("Canonical", "Ubuntu_Snappy_Core", "15.04", "latest"),

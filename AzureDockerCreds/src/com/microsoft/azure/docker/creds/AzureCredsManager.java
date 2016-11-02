@@ -11,7 +11,6 @@ import com.microsoft.rest.credentials.ServiceClientCredentials;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;

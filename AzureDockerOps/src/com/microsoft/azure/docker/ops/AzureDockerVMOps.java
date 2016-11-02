@@ -11,12 +11,11 @@ import com.microsoft.azure.management.network.PublicIpAddress;
 import com.microsoft.azure.management.resources.fluentcore.arm.ResourceUtils;
 import com.microsoft.azure.management.resources.fluentcore.utils.ResourceNamer;
 
-import java.io.InputStream;
-import java.lang.reflect.Array;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
+import static com.microsoft.azure.docker.ops.AzureDockerUtils.isValid;
+import static com.microsoft.azure.docker.resources.AzureDockerVMSetupScriptsForUbuntu.*;
 import static com.microsoft.azure.management.resources.fluentcore.utils.ResourceNamer.randomResourceName;
 
 public class AzureDockerVMOps {
@@ -41,10 +40,11 @@ public class AzureDockerVMOps {
       if (certVault.availabilitySet != null && !certVault.availabilitySet.isEmpty()) {
         defCreateStage = defCreateStage.withNewAvailabilitySet(certVault.availabilitySet);
       }
+      //
       defCreateStage =
-          ((certVault.tlsHostCert != null && !certVault.tlsHostCert.isEmpty())
-              ? defCreateStage.withTag("port", "2376") /* Default Docker host port when TLS is enabled */
-              : defCreateStage.withTag("port", "2375")) /* Defalt Docker host port when TLS is disabled */
+          ((certVault.tlsServerCert != null && !certVault.tlsServerCert.isEmpty())
+              ? defCreateStage.withTag("port", DOCKER_API_PORT_TLS_ENABLED) /* Default Docker host port when TLS is enabled */
+              : defCreateStage.withTag("port", DOCKER_API_PORT_TLS_DISABLED)) /* Default Docker host port when TLS is disabled */
               .withTag("hostType", "Docker");
 
       return defCreateStage.create();
@@ -73,7 +73,7 @@ public class AzureDockerVMOps {
         defCreateStage = defCreateStage.withNewAvailabilitySet(certVault.availabilitySet);
       }
       defCreateStage =
-          ((certVault.tlsHostCert != null && !certVault.tlsHostCert.isEmpty())
+          ((certVault.tlsServerCert != null && !certVault.tlsServerCert.isEmpty())
               ? defCreateStage.withTag("port", "2376") /* Default Docker host port when TLS is enabled */
               : defCreateStage.withTag("port", "2375")) /* Default Docker host port when TLS is disabled */
               .withTag("hostType", "Docker");
@@ -135,8 +135,8 @@ public class AzureDockerVMOps {
     dockerHost.name = hostVM.name;
     dockerHost.certVault = certVault;
     dockerHost.apiUrl = hostVM.dnsName;
-    dockerHost.isTLSSecured = certVault.tlsHostCert != null && !certVault.tlsHostCert.isEmpty();
-    dockerHost.port = (hostVM.tags != null) ? hostVM.tags.get("port") : (dockerHost.isTLSSecured) ? "2376" : "2375";
+    dockerHost.isTLSSecured = certVault.tlsServerCert != null && !certVault.tlsServerCert.isEmpty();
+    dockerHost.port = (hostVM.tags != null) ? hostVM.tags.get("port") : (dockerHost.isTLSSecured) ? DOCKER_API_PORT_TLS_ENABLED : DOCKER_API_PORT_TLS_DISABLED;
     dockerHost.hasDebugConfig = false;
     dockerHost.hasReleaseConfig = false;
     dockerHost.hostVM = hostVM;
@@ -184,9 +184,92 @@ public class AzureDockerVMOps {
     }
   }
 
-  public static void installDockerOnUbuntuServer(DockerHost dockerHost) {
+  public static DockerHost installDockerOnUbuntuServer(DockerHost dockerHost) {
     if (dockerHost == null) {
       throw new AzureDockerException("Unexpected param values; dockerHost cannot be null");
+    }
+
+    try {
+      Session session = AzureDockerSSHOps.createLoginInstance(dockerHost);
+
+      System.out.println("Start executing docker install command");
+      String cmdOut1 = AzureDockerSSHOps.executeCommand(INSTALL_DOCKER_FOR_UBUNTU, session, false);
+      System.out.println(cmdOut1);
+      System.out.println("Done executing docker install command");
+
+      if (dockerHost.isTLSSecured) {
+        if (isValid(dockerHost.certVault.tlsServerCert)) {
+          // Docker certificates are passed in; copy them to the docker host
+          setDockerCertsForUbuntuServer(dockerHost, session);
+        } else {
+          // Create new TLS certificates and upload them into the current machine representation
+          dockerHost = createDockerCertsForUbuntuServer(dockerHost, session);
+        }
+      }
+
+      // Create the Docker daemon configuration file
+      System.out.println("Start executing docker config command");
+      String dockerApiPort = (dockerHost.port != null && !dockerHost.port.isEmpty()) ? dockerHost.port : dockerHost.isTLSSecured ? DOCKER_API_PORT_TLS_ENABLED : DOCKER_API_PORT_TLS_DISABLED;
+      String createDockerOpts = dockerHost.isTLSSecured ? CREATE_DEFAULT_DOCKER_OPTS_TLS_ENABLED : CREATE_DEFAULT_DOCKER_OPTS_TLS_DISABLED;
+      createDockerOpts = createDockerOpts.replaceAll(DOCKER_API_PORT_PARAM, dockerApiPort);
+      String cmdOut3 = AzureDockerSSHOps.executeCommand(createDockerOpts, session, false);
+      System.out.println(cmdOut3);
+      System.out.println("Done executing docker config command");
+
+//      System.out.println("Start executing download to string command");
+//      String cmdOut4 = AzureDockerSSHOps.download("some_file.txt", "./", session);
+//      System.out.println(cmdOut4);
+//      System.out.println("Done executing download to string command");
+//
+//      System.out.println("Start executing upload from string command");
+//      String toWrite = "this is a string\nuploaded to a new file\nend of my file\n";
+//      System.out.println(toWrite);
+//      ByteArrayInputStream buff = new ByteArrayInputStream(new String(toWrite).getBytes());
+//      AzureDockerSSHOps.upload(buff, "some_file2.txt", "./", session);
+//      System.out.println("Done executing upload from string command");
+
+//      System.out.println("Start executing ssh command");
+//      String cmdOut5 = AzureDockerSSHOps.executeCommand("ls /", session, false);
+//      System.out.println(cmdOut5);
+//      System.out.println("Done executing ssh command");
+//
+//      System.out.println("Start executing ssh download command");
+//      AzureDockerSSHOps.download("some_file.txt", "temp", System.getProperty("user.home") + File.separator + "temp", session);
+//      System.out.println("Done executing ssh download command");
+//
+//      System.out.println("Start executing ssh command");
+//      String cmdOut6 = AzureDockerSSHOps.executeCommand("rm temp/some_file.txt", session, false);
+//      System.out.println(cmdOut6);
+//      System.out.println("Done executing ssh command");
+//
+//      System.out.println("Start executing ssh upload command");
+//      AzureDockerSSHOps.upload("some_file.txt", System.getProperty("user.home") + File.separator + "temp", "temp", session);
+//      System.out.println("Done executing ssh upload command");
+//
+//      System.out.println("Start executing docker install TLS command");
+//      String cmdOut7 = AzureDockerSSHOps.executeCommand(INSTALL_DOCKER_TLS_CERTS_FOR_UBUNTU, session, false);
+//      System.out.println(cmdOut7);
+//      System.out.println("Done executing docker install TLS command");
+//
+//      System.out.println("Start executing docker TLS config command");
+//      String createDockerTLSOpts = CREATE_DEFAULT_DOCKER_OPTS_TLS_DISABLED;
+//      createDockerTLSOpts = createDockerTLSOpts.replaceAll(DOCKER_API_PORT_PARAM, "2375");
+//      String cmdOut8 = AzureDockerSSHOps.executeCommand(createDockerTLSOpts, session, false);
+//      System.out.println(cmdOut8);
+//      System.out.println("Done executing docker TLS config command");
+
+      session.disconnect();
+
+      return dockerHost;
+
+    } catch (Exception e) {
+      throw new AzureDockerException(e.getMessage(), e);
+    }
+  }
+
+  public static DockerHost createDockerCertsForUbuntuServer(DockerHost dockerHost, Session session) {
+    if (dockerHost == null || session == null) {
+      throw new AzureDockerException("Unexpected param values; dockerHost, host name, host dns and login session cannot be null");
     }
 
     try {
@@ -198,87 +281,54 @@ public class AzureDockerVMOps {
       createTLScerts = createTLScerts.replaceAll(FQDN_PARAM, dockerHost.hostVM.dnsName);
       createTLScerts = createTLScerts.replaceAll(DOMAIN_PARAM, dockerHost.hostVM.dnsName.substring(dockerHost.hostVM.dnsName.indexOf('.')));
 
-      System.out.println("Script to run:");
-      System.out.println(createTLScerts);
+      System.out.println("Executing:\n" + createTLScerts);
+      System.out.println("Start executing docker create TLS certs command");
+      String cmdOut1 = AzureDockerSSHOps.executeCommand(createTLScerts, session, false);
+      System.out.println(cmdOut1);
+      System.out.println("Done executing docker create TLS certs command");
 
-      Session session = AzureDockerSSHOps.createLoginInstance(dockerHost);
-      System.out.println("Start executing ssh");
-      Channel channel = session.openChannel("exec");
-      ((ChannelExec)channel).setCommand("ls /");
-      InputStream commandOutput = channel.getInputStream();
-      channel.connect();
-      byte[] tmp  = new byte[1024];
-      while(true){
-        while(commandOutput.available()>0){
-          int i=commandOutput.read(tmp, 0, 1024);
-          if(i<0)break;
-          System.out.print(new String(tmp, 0, i));
-        }
-        if(channel.isClosed()){
-          if(commandOutput.available()>0) continue;
-          System.out.println("exit-status: "+channel.getExitStatus());
-          break;
-        }
-        try{Thread.sleep(100);}catch(Exception ee){}
-      }
-      System.out.println("Done executing ssh");
-      channel.disconnect();
-      session.disconnect();
+      System.out.println("Start executing docker install TLS certs command");
+      String cmdOut2 = AzureDockerSSHOps.executeCommand(INSTALL_DOCKER_TLS_CERTS_FOR_UBUNTU, session, false);
+      System.out.println(cmdOut2);
+      System.out.println("Done executing docker install TLS certs command");
 
+      System.out.println("Start downloading the TLS certs");
+      dockerHost.certVault.tlsCACert     = AzureDockerSSHOps.download("ca.pem", ".azuredocker/tls", session);
+      dockerHost.certVault.tlsCAKey      = AzureDockerSSHOps.download("ca-key.pem", ".azuredocker/tls", session);
+      dockerHost.certVault.tlsClientCert = AzureDockerSSHOps.download("cert.pem", ".azuredocker/tls", session);
+      dockerHost.certVault.tlsClientKey  = AzureDockerSSHOps.download("key.pem", ".azuredocker/tls", session);
+      dockerHost.certVault.tlsServerCert = AzureDockerSSHOps.download("server.pem", ".azuredocker/tls", session);
+      dockerHost.certVault.tlsServerKey  = AzureDockerSSHOps.download("server-key.pem", ".azuredocker/tls", session);
+      System.out.println("Done downloading TLS certs");
+
+      return dockerHost;
     } catch (Exception e) {
       throw new AzureDockerException(e.getMessage(), e);
     }
   }
 
-  private static final String INSTALL_DOCKER_FOR_UBUNTU =
-      "sudo apt-get update \n" +
-      "sudo apt-get -y install docker.io \n" +
-      "sudo groupadd docker \n" +
-      "sudo usermod -aG docker $USER \n";
+  public static void setDockerCertsForUbuntuServer(DockerHost dockerHost, Session session) {
+    if (dockerHost == null || session == null) {
+      throw new AzureDockerException("Unexpected param values; dockerHost, host name, host dns and login session cannot be null");
+    }
 
-  private static final String CREATE_DEFAULT_DOCKER_OPTS_NO_TLS =
-      "sudo service docker stop \n" +
-      "sudo echo DOCKER_OPTS=\\\"--tls=false -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock\\\" > ~/docker" +
-      "cp -f ~/docker /etc/default/docker" +
-      "sudo service docker start \n";
+    try {
+      System.out.println("Start uploading the TLS certs");
+      if (isValid(dockerHost.certVault.tlsCACert))     AzureDockerSSHOps.upload((new ByteArrayInputStream(dockerHost.certVault.tlsCACert.getBytes())),     "ca.pem", ".azuredocker/tls", session);
+      if (isValid(dockerHost.certVault.tlsCAKey))      AzureDockerSSHOps.upload((new ByteArrayInputStream(dockerHost.certVault.tlsCAKey.getBytes())),      "ca-key.pem", ".azuredocker/tls", session);
+      if (isValid(dockerHost.certVault.tlsClientCert)) AzureDockerSSHOps.upload((new ByteArrayInputStream(dockerHost.certVault.tlsClientCert.getBytes())), "cert.pem", ".azuredocker/tls", session);
+      if (isValid(dockerHost.certVault.tlsClientKey))  AzureDockerSSHOps.upload((new ByteArrayInputStream(dockerHost.certVault.tlsClientKey.getBytes())),  "key.pem", ".azuredocker/tls", session);
+      if (isValid(dockerHost.certVault.tlsServerCert)) AzureDockerSSHOps.upload((new ByteArrayInputStream(dockerHost.certVault.tlsServerCert.getBytes())), "server.pem", ".azuredocker/tls", session);
+      if (isValid(dockerHost.certVault.tlsServerKey))  AzureDockerSSHOps.upload((new ByteArrayInputStream(dockerHost.certVault.tlsServerKey.getBytes())),  "server-key.pem", ".azuredocker/tls", session);
+      System.out.println("Done uploading TLS certs");
 
-  /* Script that creates the TLS certs; must be run on the Docker host after the VM is provisioned
-   * Values to be replaced via String.replace()
-   *  "$CERT_CA_PWD_PARAM$" - some randomly generated password
-   *  "$HOSTNAME$" - Docker host name
-   *  "$FQDN_PARAM$" - fully qualified name of the Docker host
-   *  "$DNS_PARAM$" - domain of the Docker host
-   */
-  private static final String CERT_CA_PWD_PARAM = "[$]CERT_CA_PWD_PARAM[$]";
-  private static final String HOSTNAME = "[$]HOSTNAME[$]";
-  private static final String FQDN_PARAM = "[$]FQDN_PARAM[$]";
-  private static final String DOMAIN_PARAM = "[$]DOMAIN_PARAM[$]";
-  private static final String CREATE_OPENSSL_TLS_CERTS_FOR_UBUNTU =
-      "mkdir ~/.tls \n" +
-      "cd ~/.tls \n" +
-      // Generate CA certificate
-      "openssl genrsa -passout pass:$CERT_CA_PWD_PARAM$ -aes256 -out ca-key.pem 2048 \n" +
-      // Generate Server certificates
-      "openssl req -passin pass:$CERT_CA_PWD_PARAM$ -subj '/CN=Docker Host CA/C=US' -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem \n" +
-      "openssl req -passin pass:$CERT_CA_PWD_PARAM$ -subj '/CN=$HOSTNAME$' -sha256 -new -key ca-key.pem -out server.csr \n" +
-      "echo subjectAltName = DNS:$FQDN_PARAM$, DNS:*$DOMAIN_PARAM$, IP:127.0.0.1 > extfile.cnf \n" +
-      "openssl x509 -req -passin pass:$CERT_CA_PWD_PARAM$ -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server.pem -extfile extfile.cnf \n" +
-      // Generate Client certificates
-      "openssl genrsa -passout pass:$CERT_CA_PWD_PARAM$ -out key.pem \n" +
-      "openssl req -passin pass:$CERT_CA_PWD_PARAM$ -subj '/CN=client' -new -key key.pem -out client.csr \n" +
-      "echo extendedKeyUsage = clientAuth,serverAuth > extfile.cnf \n" +
-      "openssl x509 -req -passin pass:$CERT_CA_PWD_PARAM$ -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -extfile extfile.cnf \n" +
-      "cd ~\n";
+      System.out.println("Start executing docker install TLS certs command");
+      String cmdOut1 = AzureDockerSSHOps.executeCommand(INSTALL_DOCKER_TLS_CERTS_FOR_UBUNTU, session, false);
+      System.out.println(cmdOut1);
+      System.out.println("Done executing docker install TLS certs command");
 
-  private static final String GET_DOCKERHOST_TLSCACERT_FOR_UBUNTU =
-      "cat ~/.tls/ca.pem";
-  private static final String GET_DOCKERHOST_TLSCERT_FOR_UBUNTU =
-      "cat ~/.tls/cert.pem";
-  private static final String GET_DOCKERHOST_TLSCLIENTKEY_FOR_UBUNTU =
-      "cat ~/.tls/key.pem";
-  private static final String GET_DOCKERHOST_TLSSERVERCERT_FOR_UBUNTU =
-      "cat ~/.tls/server.pem";
-  private static final String GET_DOCKERHOST_TLSSERVERKEY_FOR_UBUNTU =
-      "cat ~/.tls/server-key.pem";
-
+    } catch (Exception e) {
+      throw new AzureDockerException(e.getMessage(), e);
+    }
+  }
 }

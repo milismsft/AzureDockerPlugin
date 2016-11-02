@@ -74,9 +74,10 @@ class AppMain {
 //      certVault.sshKey = "sshkey"
 //      certVault.sshPubKey = "sshpubkey"
 //      certVault.tlsCACert = "tlscacert"
-//      certVault.tlsCert = "tlscert"
+//      certVault.tlsCAKey = "tlscakey"
+//      certVault.tlsClientCert = "tlsclientcert"
 //      certVault.tlsClientKey = "tlsclientkey"
-//      certVault.tlsHostCert = "tlshostcert"
+//      certVault.tlsServerCert = "tlsservercert"
 //      certVault.tlsServerKey = "tlsserverkey"
 //
 //      AzureDockerCertVaultOps.createOrUpdateVault(azureClient, certVault, keyVaultClient)
@@ -108,6 +109,7 @@ class AppMain {
 
       AzureDockerVM vm = AzureDockerVMOps.getDockerVM(azureClient, certVault.resourceGroupName, certVault.hostName)
       DockerHost dockerHost = AzureDockerVMOps.getDockerHost(certVault, vm);
+      dockerHost.port = "2376";
       System.out.println("Dump new Virtual Machine:");
       System.out.println(mapper.writeValueAsString(dockerHost));
 
