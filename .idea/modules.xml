@@ -4,8 +4,10 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AzureCSPack/AzureCSPack.iml" filepath="$PROJECT_DIR$/AzureCSPack/AzureCSPack.iml" />
       <module fileurl="file://$PROJECT_DIR$/AzureDockerCreds/AzureDockerCreds.iml" filepath="$PROJECT_DIR$/AzureDockerCreds/AzureDockerCreds.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AzureDockerManager/AzureDockerManager.iml" filepath="$PROJECT_DIR$/AzureDockerManager/AzureDockerManager.iml" />
       <module fileurl="file://$PROJECT_DIR$/AzureDockerOps/AzureDockerOps.iml" filepath="$PROJECT_DIR$/AzureDockerOps/AzureDockerOps.iml" />
       <module fileurl="file://$PROJECT_DIR$/AzureDockerPlugin.iml" filepath="$PROJECT_DIR$/AzureDockerPlugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/IntellijDockerHostsView/IntellijDockerHostsView.iml" filepath="$PROJECT_DIR$/IntellijDockerHostsView/IntellijDockerHostsView.iml" />
     </modules>
   </component>
 </project>

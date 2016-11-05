@@ -5,6 +5,7 @@ import com.microsoft.azure.docker.resources.AzureDockerCertVault
 import com.microsoft.azure.docker.resources.AzureDockerVM
 import com.microsoft.azure.docker.resources.DockerHost
 import com.microsoft.azure.docker.resources.KnownDockerVirtualMachineImage
+import com.microsoft.azure.docker.ui.utils.PluginUtil
 import com.microsoft.azure.management.Azure
 import com.microsoft.azure.management.compute.ImageReference
 import com.microsoft.azure.management.compute.VirtualMachine
@@ -28,7 +29,12 @@ import com.jcraft.jsch.KeyPair
 class AppMain {
   public static void main(String[] args) {
     try {
-      LogManager.getLogManager().reset();
+      def loggerNames = LogManager.logManager.loggerNames
+      loggerNames.each {
+        println("Found logger: " + it)
+      }
+
+      PluginUtil.resetLoggers()
 
       ObjectMapper mapper = new ObjectMapper()
           .configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -44,13 +50,17 @@ class AppMain {
 ////      Azure azureClient = AzureCredsManager.createAuthLoginDefaultAzureClient()
 //      KeyVaultClient keyVaultClient = AzureCredsManager.getSPKeyVaultClient();
       Azure azureClient = AzureCredsManager.createSPDefaultAzureClient();
-      azureClient.vaults()
+
+      AzureDockerPluginStart dialog = new AzureDockerPluginStart();
+      dialog.pack();
+      dialog.setVisible(true);
 
       AzureDockerCertVault certVault; // = new AzureDockerCertVault()
 
       String path = "/Volumes/SharedDisk/workspace/docker/certs/";
       String path2 = "/Volumes/SharedDisk/workspace/docker/certs2/";
-      certVault = AzureDockerCertVaultOps.createFromLocalFiles(path);
+      certVault = AzureDockerCertVaultOps.getTLSCertsFromLocalFile(path);
+      certVault = AzureDockerCertVaultOps.getSSHKeysFromLocalFile(path);
 
 //      // certVault.name = AzureDockerCertVaultOps.generateUniqueKeyVaultName("dockervault2")
 //      ImageReference imgRef = KnownDockerVirtualMachineImage.OPENLOGIC_CENTOS_7_2.imageReference()
@@ -107,13 +117,13 @@ class AppMain {
 //      AzureDockerVMOps.createDefaultDockerHostVM(azureClient, certVault, imgRef)
 //      System.out.println("\tFinished at: " + new Date(System.currentTimeMillis()).toString())
 
-      AzureDockerVM vm = AzureDockerVMOps.getDockerVM(azureClient, certVault.resourceGroupName, certVault.hostName)
-      DockerHost dockerHost = AzureDockerVMOps.getDockerHost(certVault, vm);
-      dockerHost.port = "2376";
-      System.out.println("Dump new Virtual Machine:");
-      System.out.println(mapper.writeValueAsString(dockerHost));
-
-      AzureDockerVMOps.installDocker(dockerHost);
+//      AzureDockerVM vm = AzureDockerVMOps.getDockerVM(azureClient, certVault.resourceGroupName, certVault.hostName)
+//      DockerHost dockerHost = AzureDockerVMOps.getDockerHost(certVault, vm);
+//      dockerHost.port = "2376";
+//      System.out.println("Dump new Virtual Machine:");
+//      System.out.println(mapper.writeValueAsString(dockerHost));
+//
+//      AzureDockerVMOps.installDocker(dockerHost);
 
 
 //      System.out.println("Delete VM")
@@ -124,6 +134,7 @@ class AppMain {
 
       println("Passed")
     } catch (Exception e) {
+      PluginUtil.displayErrorDialogAndLog("AzureDockerPlugin", e.getMessage(), e)
       println("Failed: " + e.getMessage())
       e.printStackTrace()
     } finally {

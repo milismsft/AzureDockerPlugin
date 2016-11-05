@@ -314,7 +314,7 @@ public class AzureDockerCertVaultOps {
     }
   }
 
-  public static AzureDockerCertVault createSSHKeysFromLocalFiles(String localPath) throws AzureDockerException {
+  public static AzureDockerCertVault getSSHKeysFromLocalFile(String localPath) throws AzureDockerException {
     AzureDockerCertVault certVault = new AzureDockerCertVault();
 
     try {
@@ -327,7 +327,7 @@ public class AzureDockerCertVaultOps {
     return certVault;
   }
 
-  public static AzureDockerCertVault createTLSCertsFromLocalFiles(String localPath) throws AzureDockerException {
+  public static AzureDockerCertVault getTLSCertsFromLocalFile(String localPath) throws AzureDockerException {
     AzureDockerCertVault certVault = new AzureDockerCertVault();
 
     try {
