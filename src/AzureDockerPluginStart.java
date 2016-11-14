@@ -1,4 +1,9 @@
+import com.intellij.openapi.command.impl.DummyProject;
+import com.intellij.openapi.project.Project;
 import com.microsoft.azure.docker.creds.AzureCredsManager;
+import com.microsoft.azure.docker.intellij.forms.AzureSelectDockerHostDlg;
+import com.microsoft.azure.docker.intellij.ui.AzureSelectDockerWizardDialog;
+import com.microsoft.azure.docker.intellij.ui.AzureSelectDockerWizardModel;
 import com.microsoft.azure.docker.resources.AzureDockerSubscription;
 import com.microsoft.azure.docker.ui.AzureDockerUIManager;
 import com.microsoft.azure.docker.ui.utils.PluginUtil;
@@ -165,12 +170,26 @@ public class AzureDockerPluginStart extends JDialog {
   private void onPublishAsAzureDockerContainer() {
     System.out.println("Publishing as Azure Docker Container");
     setSelectedSubscriptions();
-    dispose();
+//    dispose();
+
+    AzureSelectDockerHostDlg dialog = new AzureSelectDockerHostDlg();
+    dialog.pack();
+    dialog.setVisible(true);
+//    JFrame frame = new
   }
 
   private void onViewAzureDockerHosts() {
     System.out.println("View Azure Docker Hosts");
     setSelectedSubscriptions();
+
+    Project project = DummyProject.getInstance();
+//    TestDialogWrapper testDialogWrapper = new TestDialogWrapper(project);
+//    testDialogWrapper.show();
+    AzureSelectDockerWizardModel model = new AzureSelectDockerWizardModel(project);
+    AzureSelectDockerWizardDialog wizard = new AzureSelectDockerWizardDialog(model);
+    wizard.setTitle("New Azure Docker Container Deployment");
+    wizard.show();
+
     dispose();
   }
 

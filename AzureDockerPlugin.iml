@@ -19,6 +19,6 @@
     <orderEntry type="library" name="org.codehaus.jackson:jackson-mapper-asl:1.9.13" level="project" />
     <orderEntry type="library" name="com.microsoft.azure:azure-mgmt-network:1.0.0-beta3" level="project" />
     <orderEntry type="module" module-name="AzureDockerManager" exported="" />
-    <orderEntry type="module" module-name="IntellijDockerHostsView" exported="" />
+    <orderEntry type="module" module-name="IntellijAzureDockerUI" exported="" />
   </component>
 </module>

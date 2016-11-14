@@ -16,6 +16,7 @@ public class DockerHost {
   public Boolean isTLSSecured;
   public DockerHostOSType hostOSType;
   public Session session;
+  public DockerHostVMState state;
 
   public enum DockerHostOSType {
     UBUNTU_SERVER_14,
@@ -24,5 +25,15 @@ public class DockerHost {
     COREOS,
     OPENLOGIC_CENTOS,
     LINUX_OTHER
+  }
+
+  public enum DockerHostVMState {
+    ACTIVE,
+    CREATING,
+    DELETING,
+    UPDATING,
+    STOPPED,
+    STARTING,
+    FAILED
   }
 }
